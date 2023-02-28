@@ -17,7 +17,6 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Please add all fields");
   }
 
-  //Check if user exists
   const userExists = await User.findOne({ email });
 
   if (userExists) {
@@ -25,16 +24,14 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Email already taken");
   }
 
-  // Hash password
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  // Create user
   const user = await User.create({
     username,
     firstName,
     lastName,
-    email: email.toLowerCase(), // sanitize: convert email to lowercase
+    email: email.toLowerCase(),
     password: hashedPassword,
   });
 
@@ -53,19 +50,17 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Authenticate a user
+// @desc    Authenticate a user / log in a user
 // @route   POST /api/users/login
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate user input
   if (!(email && password)) {
     res.status(400);
     throw new Error("Please add all fields");
   }
 
-  // Check for user email
   const user = await User.findOne({ email });
 
   if (user && (await bcrypt.compare(password, user.password))) {
@@ -84,18 +79,16 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 // @desc    Edit user data
-// @route   POST /api/users/edit
+// @route   PUT /api/users/edit
 // @access  Private
 const editUser = asyncHandler(async (req, res) => {
   const { email, username, firstName, lastName } = req.body;
 
-  // Validate user input
-  if (!(email) && !(username || firstName || lastName)) {
+  if (!email && !(username || firstName || lastName)) {
     res.status(400);
     throw new Error("Please add all fields");
   }
 
-  // Check for user email
   const user = await User.findOne({ email });
 
   if (!user) {
@@ -111,13 +104,12 @@ const editUser = asyncHandler(async (req, res) => {
   return res.status(200).json({ user, updatedUser });
 });
 
-// @desc    Get user data
+// @desc    Get user data / check for token
 // @route   POST /api/users/user
 // @access  Private
 const getUser = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  // Validate user input
   if (!email) {
     res.status(400).send("Email required");
   }
@@ -136,7 +128,7 @@ const getUser = asyncHandler(async (req, res) => {
       },
     },
   ]);
-  
+
   if (!user) {
     return res.status(401).send("User Not Found");
   }
@@ -147,7 +139,7 @@ const getUser = asyncHandler(async (req, res) => {
     balance = user[0].cashflow[0].balance;
   }
 
-  user = user[0]
+  user = user[0];
 
   return res.status(200).json({
     _id: user._id,
@@ -160,7 +152,6 @@ const getUser = asyncHandler(async (req, res) => {
   });
 });
 
-//Generate JWT
 const generateToken = (id) => {
   return jwt.sign(
     {

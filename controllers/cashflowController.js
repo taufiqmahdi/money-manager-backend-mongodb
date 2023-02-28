@@ -3,8 +3,11 @@ const asyncHandler = require("express-async-handler");
 const Cashflow = require("../models/cashflowModel");
 const User = require("../models/userModel");
 
-// @desc    Get cashflows
-// @route   GET /api/cashflows
+const mongoose = require("mongoose");
+const ObjectId = mongoose.Types.ObjectId;
+
+// @desc    Get all cashflows
+// @route   POST /api/cashflows
 // @access  Private
 const getCashflows = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -22,7 +25,7 @@ const getCashflows = asyncHandler(async (req, res) => {
   res.status(200).json(cashflows);
 });
 
-// @desc    Set cashflow
+// @desc    Set cashflow / Add a cashflow
 // @route   POST /api/cashflows/set
 // @access  Private
 const setCashflow = asyncHandler(async (req, res) => {
@@ -47,8 +50,7 @@ const setCashflow = asyncHandler(async (req, res) => {
   const getBalance = async () => {
     const latestEntry = await Cashflow.findOne({
       where: { userId: id },
-      order: [["createdAt", "DESC"]],
-    });
+    }).sort({ createdAt: -1 });
 
     var balance = 0;
 
@@ -80,8 +82,8 @@ const setCashflow = asyncHandler(async (req, res) => {
   res.status(200).json(cashflow);
 });
 
-// @desc    Get cashflow
-// @route   GET /api/cashflows/cashflow
+// @desc    Get cashflow of a spesific date
+// @route   POST /api/cashflows/cashflow
 // @access  Private
 const getCashflow = asyncHandler(async (req, res) => {
   const { email, startDate, endDate } = req.body;
@@ -93,10 +95,36 @@ const getCashflow = asyncHandler(async (req, res) => {
     return res.status(401).send("User Not Found");
   }
 
-  const cashflow = await Cashflow.find({
-    userId: req.user.id,
-    date: { $gte: startDate, $lte: endDate },
-  });
+  const cashflow = await Cashflow.aggregate([
+    {
+      $match: {
+        userId: new ObjectId(id),
+        date: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        },
+      },
+    },
+    {
+      $project: {
+        detail: 1,
+        userId: 1,
+        cashflowType: 1,
+        cashflowTypeDetail: 1,
+        amount: 1,
+        balance: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        __v: 1,
+        date: {
+          $dateToString: {
+            format: "%d-%m-%Y",
+            date: "$date",
+          },
+        },
+      },
+    },
+  ]);
 
   return res.status(200).json(cashflow);
 });

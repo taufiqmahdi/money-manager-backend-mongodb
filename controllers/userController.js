@@ -20,8 +20,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const userExists = await User.findOne({ email });
 
   if (userExists) {
-    res.status(409);
-    throw new Error("Email already taken");
+    res.status(409).send("Email already taken");
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -45,8 +44,7 @@ const registerUser = asyncHandler(async (req, res) => {
       token: generateToken(user.id),
     });
   } else {
-    res.status(400);
-    throw new Error("Invalid user data");
+    res.status(400).send("Invalid user data");
   }
 });
 
@@ -73,8 +71,7 @@ const loginUser = asyncHandler(async (req, res) => {
       token: generateToken(user.id),
     });
   } else {
-    res.status(400);
-    throw new Error("Invalid credentials");
+    res.status(401).send("Invalid Credentials");
   }
 });
 
@@ -102,6 +99,35 @@ const editUser = asyncHandler(async (req, res) => {
   );
 
   return res.status(200).json({ user, updatedUser });
+});
+
+// @desc    Edit user password
+// @route   PUT /api/users/edit-pass
+// @access  Private
+const editUserPassword = asyncHandler(async (req, res) => {
+  const { email, password, newPassword } = req.body;
+
+  if (!(email && password && newPassword)) {
+    res.status(400);
+    throw new Error("Please add all fields");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (user && (await bcrypt.compare(password, user.password))) {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    const updatedUser = await User.findOneAndUpdate(
+      { email },
+      { password: hashedPassword },
+      { returnDocument: "after" }
+    );
+
+    return res.status(200).json({ user, updatedUser });
+  } else {
+    res.status(401).send("Invalid Credentials");
+  }
 });
 
 // @desc    Get user data / check for token
@@ -169,4 +195,5 @@ module.exports = {
   loginUser,
   getUser,
   editUser,
+  editUserPassword,
 };

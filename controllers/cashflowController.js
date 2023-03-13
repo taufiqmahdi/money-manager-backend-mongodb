@@ -126,14 +126,10 @@ const getCashflow = asyncHandler(async (req, res) => {
     {
       $project: {
         detail: 1,
-        userId: 1,
         cashflowType: 1,
         cashflowTypeDetail: 1,
         amount: 1,
         balance: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        __v: 1,
         date: {
           $dateToString: {
             format: "%d-%m-%Y",
@@ -147,6 +143,9 @@ const getCashflow = asyncHandler(async (req, res) => {
   return res.status(200).json(cashflow);
 });
 
+// @desc    Get cashflow of a spesific date and paginated
+// @route   POST /api/cashflows/cashflow-page
+// @access  Private
 const getCashflowByPage = asyncHandler(async (req, res) => {
   const { email, startDate, endDate, page } = req.body;
   const { id } = req.user;
@@ -174,14 +173,10 @@ const getCashflowByPage = asyncHandler(async (req, res) => {
     {
       $project: {
         detail: 1,
-        userId: 1,
         cashflowType: 1,
         cashflowTypeDetail: 1,
         amount: 1,
         balance: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        __v: 1,
         date: {
           $dateToString: {
             format: "%d-%m-%Y",

@@ -97,7 +97,22 @@ const editUser = asyncHandler(async (req, res) => {
     { returnDocument: "after" }
   );
 
-  return res.status(200).json({ user, updatedUser });
+  return res.status(200).send({
+    user: {
+      _id: user.id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    },
+    updatedUser: {
+      _id: updatedUser.id,
+      username: updatedUser.username,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      email: updatedUser.email,
+    },
+  });
 });
 
 // @desc    Edit user password

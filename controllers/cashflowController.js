@@ -89,6 +89,7 @@ const setCashflow = asyncHandler(async (req, res) => {
   });
 
   res.status(200).json({
+    _id: cashflow._id,
     detail: cashflow.detail,
     cashflowType: cashflow.cashflowType,
     cashflowTypeDetail: cashflow.cashflowTypeDetail,

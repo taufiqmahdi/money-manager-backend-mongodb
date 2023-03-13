@@ -13,8 +13,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const { username, firstName, lastName, email, password } = req.body;
 
   if (!(email && username && password && firstName && lastName)) {
-    res.status(400);
-    throw new Error("Please add all fields");
+    res.status(400).send("Please add all fields");
   }
 
   const userExists = await User.findOne({ email });

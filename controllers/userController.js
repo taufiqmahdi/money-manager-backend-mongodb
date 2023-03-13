@@ -13,8 +13,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const { username, firstName, lastName, email, password } = req.body;
 
   if (!(email && username && password && firstName && lastName)) {
-    res.status(400);
-    throw new Error("Please add all fields");
+    res.status(400).send("Please add all fields");
   }
 
   const userExists = await User.findOne({ email });
@@ -98,7 +97,22 @@ const editUser = asyncHandler(async (req, res) => {
     { returnDocument: "after" }
   );
 
-  return res.status(200).json({ user, updatedUser });
+  return res.status(200).send({
+    user: {
+      _id: user.id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    },
+    updatedUser: {
+      _id: updatedUser.id,
+      username: updatedUser.username,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      email: updatedUser.email,
+    },
+  });
 });
 
 // @desc    Edit user password
@@ -124,7 +138,11 @@ const editUserPassword = asyncHandler(async (req, res) => {
       { returnDocument: "after" }
     );
 
-    return res.status(200).json({ user, updatedUser });
+    return res.status(200).json({
+      updatedUser: {
+        email: updatedUser.email,
+      },
+    });
   } else {
     res.status(401).send("Invalid Credentials");
   }

@@ -20,7 +20,10 @@ const getCashflows = asyncHandler(async (req, res) => {
 
   const { id } = user;
 
-  const cashflows = await Cashflow.find({ userId: id });
+  const cashflows = await Cashflow.find(
+    { userId: id },
+    { userId: 0, createdAt: 0, updatedAt: 0, __v: 0 }
+  );
 
   res.status(200).json(cashflows);
 });
@@ -38,6 +41,12 @@ const setCashflow = asyncHandler(async (req, res) => {
     description,
     date,
   } = req.body;
+
+  if (
+    !(email && detail && cashflowType && cashflowTypeDetail && amount && date)
+  ) {
+    res.status(400).send("Please add all fields that is required");
+  }
 
   const user = await User.findOne({ email });
 
@@ -79,7 +88,16 @@ const setCashflow = asyncHandler(async (req, res) => {
     balance: newBalance,
   });
 
-  res.status(200).json(cashflow);
+  res.status(200).json({
+    _id: cashflow._id,
+    detail: cashflow.detail,
+    cashflowType: cashflow.cashflowType,
+    cashflowTypeDetail: cashflow.cashflowTypeDetail,
+    amount: cashflow.amount,
+    description: cashflow.description,
+    date: cashflow.date,
+    balance: cashflow.balance,
+  });
 });
 
 // @desc    Get cashflow of a spesific date
@@ -108,14 +126,10 @@ const getCashflow = asyncHandler(async (req, res) => {
     {
       $project: {
         detail: 1,
-        userId: 1,
         cashflowType: 1,
         cashflowTypeDetail: 1,
         amount: 1,
         balance: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        __v: 1,
         date: {
           $dateToString: {
             format: "%d-%m-%Y",
@@ -129,8 +143,62 @@ const getCashflow = asyncHandler(async (req, res) => {
   return res.status(200).json(cashflow);
 });
 
+// @desc    Get cashflow of a spesific date and paginated
+// @route   POST /api/cashflows/cashflow-page
+// @access  Private
+const getCashflowByPage = asyncHandler(async (req, res) => {
+  const { email, startDate, endDate, page } = req.body;
+  const { id } = req.user;
+
+  const user = await User.find({ _id: id });
+
+  if (!user) {
+    return res.status(401).send("User Not Found");
+  }
+
+  let skipValue;
+
+  page == 1 ? (skipValue = 1) : (skipValue = (page - 1) * 10);
+
+  const cashflow = await Cashflow.aggregate([
+    {
+      $match: {
+        userId: new ObjectId(id),
+        date: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        },
+      },
+    },
+    {
+      $project: {
+        detail: 1,
+        cashflowType: 1,
+        cashflowTypeDetail: 1,
+        amount: 1,
+        balance: 1,
+        date: {
+          $dateToString: {
+            format: "%d-%m-%Y",
+            date: "$date",
+          },
+        },
+      },
+    },
+    {
+      $skip: skipValue,
+    },
+    {
+      $limit: 10,
+    },
+  ]);
+
+  return res.status(200).json(cashflow);
+});
+
 module.exports = {
   getCashflows,
   setCashflow,
   getCashflow,
+  getCashflowByPage,
 };

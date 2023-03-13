@@ -20,7 +20,10 @@ const getCashflows = asyncHandler(async (req, res) => {
 
   const { id } = user;
 
-  const cashflows = await Cashflow.find({ userId: id }, {userId: 0, createdAt: 0, updatedAt: 0, __v: 0})
+  const cashflows = await Cashflow.find(
+    { userId: id },
+    { userId: 0, createdAt: 0, updatedAt: 0, __v: 0 }
+  );
 
   res.status(200).json(cashflows);
 });
@@ -38,6 +41,12 @@ const setCashflow = asyncHandler(async (req, res) => {
     description,
     date,
   } = req.body;
+
+  if (
+    !(email && detail && cashflowType && cashflowTypeDetail && amount && date)
+  ) {
+    res.status(400).send("Please add all fields that is required");
+  }
 
   const user = await User.findOne({ email });
 
@@ -79,7 +88,15 @@ const setCashflow = asyncHandler(async (req, res) => {
     balance: newBalance,
   });
 
-  res.status(200).json(cashflow);
+  res.status(200).json({
+    detail: cashflow.detail,
+    cashflowType: cashflow.cashflowType,
+    cashflowTypeDetail: cashflow.cashflowTypeDetail,
+    amount: cashflow.amount,
+    description: cashflow.description,
+    date: cashflow.date,
+    balance: cashflow.balance,
+  });
 });
 
 // @desc    Get cashflow of a spesific date

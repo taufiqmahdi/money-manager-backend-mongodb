@@ -138,7 +138,11 @@ const editUserPassword = asyncHandler(async (req, res) => {
       { returnDocument: "after" }
     );
 
-    return res.status(200).json({ user, updatedUser });
+    return res.status(200).json({
+      updatedUser: {
+        email: updatedUser.email,
+      },
+    });
   } else {
     res.status(401).send("Invalid Credentials");
   }

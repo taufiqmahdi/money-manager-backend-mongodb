@@ -20,7 +20,7 @@ const getCashflows = asyncHandler(async (req, res) => {
 
   const { id } = user;
 
-  const cashflows = await Cashflow.find({ userId: id });
+  const cashflows = await Cashflow.find({ userId: id }, {userId: 0, createdAt: 0, updatedAt: 0, __v: 0})
 
   res.status(200).json(cashflows);
 });
